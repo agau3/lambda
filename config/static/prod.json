@@ -1,0 +1,9 @@
+{
+    "log-level": "INFO",
+    "stream": {
+        "pos": {
+            "shards": 3,
+            "retention": 168
+        }
+    }
+}

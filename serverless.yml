@@ -1,0 +1,251 @@
+package:
+  individually: true
+  excludeDevDependencies: false
+
+service: store-order-history
+
+custom:
+  account: ${opt:account, 'validation'}
+  stage: ${opt:stage, 'dev', 'validation'}
+  region: ${opt:region, 'us-west-2'}
+  tags:
+    Application: OSP
+    Owner: ${ssm:/${self:service}/${self:custom.stage}/OSP-support-email}
+    Environment: ${self:custom.stage}
+    Version: ${file(metadata.json):build.version, 'na'} # Deployment tags on stags and resources, generated through pipeline.
+    GitHash: ${file(metadata.json):build.gitHash, 'na'}
+    BuildDate: ${file(metadata.json):build.date, 'na'}
+    JenkinsJob: ${file(metadata.json):build.jenkins.job, 'na'}
+    JenkinsBuild: ${file(metadata.json):build.jenkins.build, 'na'}
+
+  names:
+    onlineSaleActionTable: ${self:custom.stage}-osp-online-sale-actions
+    cmosAssociateOrdersTable: omni-order-history-${self:custom.stage}-cmos-associate-orders
+    cmosCustomerOrdersTable: omni-order-history-${self:custom.stage}-cmos-customer-orders
+    cmosOrderDetailsTable: omni-order-history-${self:custom.stage}-cmos-order-details
+    cmosItemDetailsTable: omni-order-history-${self:custom.stage}-cmos-item-details
+    posOrderDetailsTable: omni-order-history-${self:custom.stage}-pos-order-details
+    posItemDetailsTable: omni-order-history-${self:custom.stage}-pos-order-item-details
+    posAssociateOrdersTable: omni-order-history-${self:custom.stage}-pos-associate-sales
+    posCustomerOrdersTable: omni-order-history-${self:custom.stage}-pos-customer-sales
+    cmosOrdersTable: omni-order-history-${self:custom.stage}-cmos-orders
+
+    posBackfillStream: osp-pos-orders-backfill-${self:custom.stage}
+
+  cors:
+    origin: '*'
+    headers:
+      - Access-Control-Allow-Headers
+      - Access-Control-Allow-Origin
+      - Authorization
+      - Content-Type
+      - X-Amz-Date
+      - X-Amz-Security-Token
+      - X-Amz-User-Agent
+      - X-Customer-Id
+    allowCredentials: true
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  tags: ${self:custom.tags} # Unified tags for resources and stacks.
+  stackTags: ${self:custom.tags}
+  versionFunctions: false
+  memorySize: 256
+  timeout: 600
+  tracing:
+    apiGateway: true
+    lambda: true
+  logs:
+    restApi:
+      accessLogging: true
+      format: '{
+                  "_time": "$context.requestTime",
+                  "stage" : "$context.stage",
+                  "requestId":"$context.requestId",
+                  "api_id" : "$context.apiId",
+                  "resource_id" : "$context.resourceId",
+                  "http_method" : "$context.httpMethod",
+                  "source_ip" : "$context.identity.sourceIp",
+                  "user-agent" : "$context.identity.userAgent",
+                  "account_id" : "$context.identity.accountId",
+                  "resourcePath":"$context.resourcePath",
+                  "responseStatus":"$context.status",
+                  "responseLatency":"$context.responseLatency",
+                  "integrationLatency":"$context.integrationLatency",
+                  "authorizer_integrationLatency":"$context.authorizer.integrationLatency",
+                  "$context.responseLength":"$context.responseLength"
+                }'
+      executionLogging: false
+  deploymentBucket:
+    name: sls-deploy-${self:custom.account}-${self:custom.region}
+    serverSideEncryption: AES256
+  environment:
+    SERVICE_NAME: ${self:service}
+    STAGE: ${self:custom.stage}
+    NM0_ACCOUNT_ID: ${ssm:/${self:service}/${self:custom.stage}/nmo.accountId}
+    LOG_LEVEL: ${file(config/static/${self:custom.stage}.json):log-level}
+    POS_SALES_STREAM: ${ssm:/${self:service}/${self:custom.stage}/streamName}
+    CMOS_SALES_STREAM: ${ssm:/${self:service}/${self:custom.stage}/cmosStreamName}
+    CROSS_ACCOUNT_DYNAMO_ROLE: arn:aws:iam::${self:provider.environment.NM0_ACCOUNT_ID}:role/Omni-Order-History-CrossAccount-Role-${self:custom.stage}
+    ONLINE_SALE_ACTION_TABLE_NAME: ${self:custom.names.onlineSaleActionTable}
+    CMOS_ASSOCIATE_ORDERS_TABLE_NAME: ${self:custom.names.cmosAssociateOrdersTable}
+    CMOS_CUSTOMER_ORDERS_TABLE_NAME: ${self:custom.names.cmosCustomerOrdersTable}
+    CMOS_ORDER_DETAILS_TABLE_NAME: ${self:custom.names.cmosOrderDetailsTable}
+    CMOS_ITEM_DETAILS_TABLE_NAME: ${self:custom.names.cmosItemDetailsTable}
+    POS_ASSOCIATE_ORDERS_TABLE_NAME: ${self:custom.names.posAssociateOrdersTable}
+    POS_CUSTOMER_ORDERS_TABLE_NAME: ${self:custom.names.posCustomerOrdersTable}
+    POS_ORDER_DETAILS_TABLE_NAME: ${self:custom.names.posOrderDetailsTable}
+    POS_ITEM_DETAILS_TABLE_NAME: ${self:custom.names.posItemDetailsTable}
+    CMOS_ORDERS_TABLE_NAME: ${self:custom.names.cmosOrdersTable}
+    POS_RETRY_QUEUE_URL: { Ref: "PosOrderHistoryRetryQueue" }
+    POS_DEAD_LETTER_QUEUE_URL: { Ref: "PosOrderHistoryDLQ" }
+    MAX_RETRY_ATTEMPTS: 3
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    AWS_XRAY_DEBUG_MODE: true
+
+  iamRoleStatements: # permissions granted to this service
+    - Effect: Allow
+      Action:
+        - SSM:GetParameter
+      Resource:
+        - arn:aws:ssm:${self:custom.region}:#{AWS::AccountId}:parameter/${self:service}/${self:custom.stage}/*
+    - Effect: Allow
+      Action:
+        - "KMS:Decrypt"
+      Resource:
+        - arn:aws:kms:${self:custom.region}:#{AWS::AccountId}:alias/aws/ssm
+        - arn:aws:kms:${self:custom.region}:#{AWS::AccountId}:alias/aws/kinesis
+    - Effect: 'Allow'
+      Action:
+        - lambda:InvokeFunction
+      Resource: arn:aws:lambda:${self:custom.region}:#{AWS::AccountId}:function:${self:service}-${self:custom.stage}-*
+    - Effect: 'Allow'
+      Action:
+        - sts:AssumeRole
+      Resource: arn:aws:lambda:${self:custom.region}:#{AWS::AccountId}:role/lambda-cross-account-access-role
+    - Effect: Allow
+      Action:
+        - sts:AssumeRole
+      Resource: 
+        - arn:aws:iam::168860074409:role/Omni-Order-History-CrossAccount-Role-${self:custom.stage}
+    - Effect: Allow
+      Action:
+        - dynamoDB:Query
+        - dynamoDB:PutItem
+        - dynamoDB:GetItem
+        - dynamoDB:UpdateItem
+        - dynamoDB:DeleteItem
+        - dynamoDB:BatchWriteItem
+        - dynamoDB:BatchDeleteItem
+      Resource: [ 
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.onlineSaleActionTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosAssociateOrdersTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosCustomerOrdersTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosOrderDetailsTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosOrdersTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosItemDetailsTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posAssociateOrdersTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posCustomerOrdersTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posOrderDetailsTable}",
+                  "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posItemDetailsTable}"]
+    - Effect: Allow
+      Action:
+        - kinesis:DescribeStream
+        - kinesis:DescribeStreamSummary
+        - kinesis:ListShards
+        - kinesis:GetShardIterator
+        - kinesis:ListStreams
+        - kinesis:GetRecords
+        - kinesis:SubscribeToShard
+      Resource:
+        - arn:aws:kinesis:${self:custom.region}:#{AWS::AccountId}:stream/${self:provider.environment.POS_SALES_STREAM}
+        - arn:aws:kinesis:${self:custom.region}:#{AWS::AccountId}:stream/${self:provider.environment.CMOS_SALES_STREAM}
+        - { "Fn::GetAtt": [ PosBackfillStream, Arn ] }
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - !GetAtt PosOrderHistoryRetryQueue.Arn
+        - !GetAtt PosOrderHistoryDLQ.Arn
+    - Effect: Allow
+      Action: 
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: '*'           
+
+  apiKeys:
+    - ${self:provider.stage}-processOrder
+
+functions:
+  readCmosKinesisStream:
+    handler: src/handlers/cmosHandler.readCmosKinesisStream
+    role:  DynamoDBCrossAccountServiceRole
+    events:
+      - stream:
+          type: kinesis
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+          arn: arn:aws:kinesis:${self:custom.region}:#{AWS::AccountId}:stream/${ssm:/${self:service}/${self:custom.stage}/cmosStreamName}
+
+  readPosKinesisStream:
+    handler: src/handlers/posHandler.readPosKinesisStream
+    role:  DynamoDBCrossAccountServiceRole
+    events:
+      - stream:
+          type: kinesis
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+          arn: arn:aws:kinesis:${self:custom.region}:#{AWS::AccountId}:stream/${ssm:/${self:service}/${self:custom.stage}/streamName}
+
+  # readOnlineSaleStream:
+  #   handler: src/handlers/onlineSaleHandler.readCmosKinesisStream
+  #   role:  DynamoDBCrossAccountServiceRole
+  #   events:
+  #     - stream:
+  #         type: kinesis
+  #         batchSize: 100
+  #         startingPosition: TRIM_HORIZON
+  #         arn: arn:aws:kinesis:${self:custom.region}:#{AWS::AccountId}:stream/${ssm:/${self:service}/${self:custom.stage}/cmosStreamName}
+
+  cmosOrderProcess:
+    handler: src/handlers/cmosOrdersHandler.process
+    role:  DynamoDBCrossAccountServiceRole
+    events:
+      - stream:
+          type: kinesis
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+          arn: arn:aws:kinesis:${self:custom.region}:#{AWS::AccountId}:stream/${ssm:/${self:service}/${self:custom.stage}/cmosStreamName}
+
+  posBackfillStream:
+    handler: src/handlers/posHandler.readPosKinesisStream
+    role: DynamoDBCrossAccountServiceRole
+    events:
+      - stream:
+          type: kinesis
+          batchSize: 100
+          startingPosition: TRIM_HORIZON
+          arn: { "Fn::GetAtt": [ PosBackfillStream, Arn ] }
+          # consumer: true
+
+  retryPosOrderHistoryUpdates:
+    tracing: true
+    handler: src/handlers/sqs-handler.retryFailedPosUpdates
+    role: DynamoDBCrossAccountServiceRole
+    events:
+      - sqs:
+          arn: !GetAtt PosOrderHistoryRetryQueue.Arn
+          batchSize: 10
+          
+resources: ${file(template.yml)}
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-plugin-typescript
+  - serverless-plugin-warmup-ts-bridge
+  - serverless-plugin-warmup
+  - serverless-plugin-include-dependencies
+  

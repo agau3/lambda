@@ -1,0 +1,56 @@
+{
+  "name": "store-order-history",
+  "version": "1.0.0",
+  "description": "Lambda to persist in-store & cmos order history for Order details, Order Item Details, Associate Order and Customer",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "jest --bail --coverage "
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://stash.mynmg.com/scm/omni/store-order-history.git"
+  },
+  "author": "sriram venkataraman <sriram_venkataraman@neimanmarcus.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@nmg/osp-backend-utils": "^5.0.0",
+    "@types/splunk-bunyan-logger": "^0.9.0",
+    "aws-parameter-cache": "^1.0.5",
+    "bunyan": "^1.8.12",
+    "execution-time": "^1.3.0",
+    "jsonschema": "^1.2.4",
+    "kinesis-events": "^3.0.0",
+    "nodejs-base64": "^1.0.3",
+    "request-promise": "^4.2.4",
+    "serverless-offline": "^5.11.0",
+    "splunk-bunyan-logger": "^0.10.1"
+  },
+  "devDependencies": {
+    "@aws/dynamodb-data-mapper": "^0.7.3",
+    "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
+    "@types/aws-lambda": "^8.10.25",
+    "@types/jest": "^24.0.22",
+    "@types/md5": "^2.1.33",
+    "@types/node": "^10.14.9",
+    "@types/request-promise": "^4.1.43",
+    "@types/serverless": "^1.18.2",
+    "@types/sinon": "^7.5.1",
+    "aws-lambda": "^0.1.2",
+    "aws-sdk": "^2.458.0",
+    "aws-sdk-mock": "^4.4.0",
+    "dotenv": "^8.2.0",
+    "eslint": "^6.6.0",
+    "jest": "^24.9.0",
+    "request": "2.88.0",
+    "serverless": "^1.67.0",
+    "serverless-plugin-include-dependencies": "^3.2.1",
+    "serverless-plugin-typescript": "1.1.7",
+    "serverless-plugin-warmup": "^4.7.0-rc.1",
+    "serverless-plugin-warmup-ts-bridge": "^0.1.3",
+    "serverless-pseudo-parameters": "^2.4.0",
+    "sinon": "^7.5.0",
+    "ts-jest": "^24.1.0",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.5"
+  }
+}

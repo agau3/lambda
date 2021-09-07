@@ -1,0 +1,510 @@
+    export interface PosOrder {
+        eboPayload: EboPayload;
+    }
+
+    export interface EboPayload {
+        OrderOut: OrderOut;
+        iccProcessingTime?: string;
+    }
+    
+    export interface OrderOut {
+        orderSourceSystem: string;
+        orderTargetSystem: string;
+        orderHeader: OrderHeader;
+        soldTo: SoldTo[];
+        payment: Payment[];
+        shipToCustomer: ShipToCustomer[];
+    }
+
+    export interface Id {
+        omsOrderNumber: string;
+    }
+
+    export interface OrderHeader {
+        id: Id[];
+        externalOrderNumber: string;
+        orderDate: string;
+        employeePin: string;
+        replenishmentOrder: string;
+        storeNumber: string;
+        terminalId: string;
+        vendorOrderNumber: string;
+        vendorId: string;
+        salesAssociateName: string;
+        comments: string;
+        totalHandlingAmount: string;
+        associateTransaction: string;
+        midVoidedTransaction: string;
+        taxExemptTransaction: string;
+        totalOrderAmount: string;
+        clientNumber: string;
+        ccsNumber: string;
+        clienteledCustomerIndex: string;
+        discountType: string;
+        transactionType: string;
+        storeDivision: string;
+        transactionNumber: string;
+        newOrderFlag: string;
+        omsOrderType: string;
+        ccappStatus: string;
+        remoteHost: string;
+        remoteAddr: string;
+        httpUserAgent: string;
+        httpAcceptLanguage: string;
+        requestContentType: string;
+        protocol: string;
+        method: string;
+        requestedUrl: string;
+        queryString: string;
+        remoteUser: string;
+        authorityType: string;
+        httpHost: string;
+        httpAccept: string;
+        httpAcceptCharset: string;
+        httpAcceptEncoding: string;
+        siteHttpServerName: string;
+        httpCookie: string;
+        httpReferer: string;
+        browserDateAndTime: string;
+        browserTimeZone: string;
+        fraudnetBrowserData: string;
+        httpHeaders: string;
+        timeOnSite: string;
+        itemsRemoved: string;
+        fraudnetDate: string;
+        bfFraudState: string;
+        merchAmount: string;
+        merchSavingTag: string;
+        merchSavingAmount: string;
+        oversizeOverweightChargeTag: string;
+        oversizeOverweightChargeAmount: string;
+        fishWildlifeFeesTag: string;
+        fishWildlifeFeesAmount: string;
+        deliveryProcessingAmount: string;
+        dutiesAmount: string;
+        taxesAmount: string;
+        totalAmount: string;
+        paymentType: string;
+        amount: string;
+        promotionsAppliedTag: string;
+        promotionsApplied: string;
+        marketingEmailOptinFlag: string;
+        merchantId: string;
+        language: string;
+        orderTime: string;
+        taxExemptId: string;
+        totalDiscountAmount: string;
+        totalAssociateDiscAmt: string;
+        associateDiscountID: string;
+        emailedTransaction: string;
+        originalTerminalId: string;
+        originalTransactionNumber: string;
+        originalOrderDate: string;
+        linkedStoreNumber: string;
+        linkedTerminalId: string;
+        linkedTransactionNumber: string;
+        linkedOrderDate: string;
+        totalSaleItems: string;
+        totalReturnItems: string;
+        totalVoidItems: string;
+        totalSaleAmount: string;
+        totalRefundAmount: string;
+        subtotal: string;
+        totalStateTaxAmount: string;
+        totalCountyTaxAmount: string;
+        totalCityTaxAmount: string;
+        totalLocalTaxAmount: string;
+        totalAddtlCountyTaxAmount: string;
+        totalAddtlCityTaxAmount: string;
+        totalAddtlLocalTaxAmount: string;
+        orderCompany: string;
+        orderReturnIneligMsg: string;
+    }
+
+    export interface Phone {
+        phoneType: string;
+        phoneNumber: string;
+        phoneExtension: string;
+    }
+
+    export interface SoldTo {
+        omsCustomerId: string;
+        externalCustomerId: string;
+        prefixCode: string;
+        firstName: string;
+        lastName: string;
+        suffixCode: string;
+        gender: string;
+        preferredServiceLevelCode: string;
+        requiredServiceLevelCode: string;
+        email: string;
+        firmName: string;
+        addressLine1: string;
+        addressLine2: string;
+        addressLine3: string;
+        city: string;
+        stateCode: string;
+        zipCode: string;
+        countryCode: string;
+        isoCountryCode: string;
+        commercialAddr: string;
+        sendEmailConfirmation: string;
+        deliveryPhone: string;
+        phone: Phone[];
+        spamFlag: string;
+        issueType: string;
+        issueId: string;
+        issueOrigin: string;
+        dateOfBirth: string;
+        verificationFlag: string;
+        addressType: string;
+        countyCode: string;
+        bfBillCountryCode: string;
+        bfBillFirstName: string;
+        bfBillLastName: string;
+        bfBillLine1: string;
+        bfBillLine2: string;
+        bfBillLine3: string;
+        bfBillCity: string;
+        bfBillStateCode: string;
+        bfBillZipCode: string;
+        bfBillFirmName: string;
+        bfBillEmail: string;
+        bfBillDayPhone: string;
+        bfBillEveningPhone: string;
+    }
+
+    export interface Payment {
+        type: string;
+        account: string;
+        expirationDate: string;
+        amountReceived: string;
+        cid: string;
+        transDate: string;
+        posType: string;
+        kIAccountNumber: string;
+        authorizationCode: string;
+        referalCode: string;
+        externalReferenceCode: string;
+        changeTender: string;
+        customerNotPresent: string;
+        swiped: string;
+        storedValueCard: string;
+        nonSwipeReasonCode: string;
+        managerID: string;
+        authorizationService: string;
+        aurusCustomerID: string;
+        aurusWhizTicketNum: string;
+        aurusCardToken: string;
+        kIType: string;
+        customerPresent: string;
+        cardPresent: string;
+        debitFlag: string;
+        aurusCardEntryMode: string;
+        aurusCardType: string;
+    }
+
+    export interface Phone2 {
+        phoneType: string;
+        phoneNumber: string;
+        phoneExtension: string;
+    }
+
+    export interface OstComments {
+        commentText: string[];
+    }
+
+    export interface Sale {
+        beginDate: string[];
+        endDate: string[];
+    }
+
+    export interface Return {
+        originalStore?: string[];
+        originalRegister?: string[];
+        originalTransaction?: string[];
+        originalDate?: string[];
+        originalAssociateID?: string[];
+        originalAssistantID?: string[];
+        originalTaxRate?: string[];
+        originalZipCode?: string[];
+        receiptScanned?: string[];
+        giftReceiptScanned?: string[];
+        originalTotalCashTender?: string[];
+        originalTotalNonCashTender?: string[];
+    }
+
+    export interface LocalizedPrice {
+        currencyCode: string;
+        price: string[];
+    }
+
+    export interface ExchangeRate {
+        quoteId: string[];
+        fromCurrency: string[];
+        toCurrency: string[];
+        rate: string[];
+    }
+
+    export interface LineItem {
+        serviceFlag?: string;
+        lineItemType: string;
+        omsLineItemId: string;
+        omsCatalogId: string;
+        omsCatalogItem: string;
+        omsSkuId: string;
+        externalLineItemId: string;
+        externalSkuId: string;
+        productName: string;
+        quantity: string;
+        serviceLevelCode: string;
+        giftWrapCode: string;
+        priceEach: string;
+        taxEach: string;
+        otherEach: string;
+        freightEach: string;
+        dutyEach: string;
+        currentStatus: string;
+        currentStatusDate: string;
+        shipDate: string;
+        promotionCode: string;
+        giftMessage1: string;
+        giftMessage2: string;
+        giftMessage3: string;
+        giftMessage4: string;
+        giftMessage5: string;
+        cancelCode: string;
+        shipMethodCode: string;
+        shipMethodName: string;
+        carrierName: string;
+        carrierCode: string;
+        carrierTrackingUrl: string;
+        carrierTrackingNumber: string;
+        shipFromFacilityNumber: string;
+        shipFromFacilityName: string;
+        shipFromAddressLine1: string;
+        shipFromAddressLine2: string;
+        shipFromAddressLine3: string;
+        shipFromCity: string;
+        shipFromStateCode: string;
+        shipFromZipCode: string;
+        shipFromCountryCode: string;
+        registryId: string;
+        replenishmentContractId: string;
+        selectedReplenishmentInterval: string;
+        changeFlag: string;
+        omsTicketId: string;
+        posPackageId: string;
+        specialInstructions?: string;
+        mpsLsku: string;
+        packageCnt: string;
+        fulfillStore: string;
+        rerouteStores: string;
+        posOrderType: string;
+        cancelAmt: string;
+        returnAmt: string;
+        tariffEach: string;
+        discountEach: string;
+        posSendingAssocPin: string;
+        posRingingAssocPin: string;
+        mpsSsku: string;
+        printTicketTime: string;
+        routed: string;
+        actionDate: string;
+        posStatus: string;
+        storeAvailableQty: string;
+        pkgWeight: string;
+        pkgHeight: string;
+        pkgWidth: string;
+        pkgLength: string;
+        division: string;
+        packageInfo: string;
+        dept: string;
+        class: string;
+        vendor: string;
+        vendorStyle: string;
+        colorDesc: string;
+        sizeDesc: string;
+        incentiveApplied: string;
+        returnCode: string;
+        returnQty: string;
+        returnPendingQty: string;
+        dynamicImageUrl: string;
+        selectionSetId: string;
+        ostComments: OstComments;
+        webProductId: string;
+        travelMethod: string;
+        extendedPrice: string;
+        fulfillCity: string;
+        fulfillCountry: string;
+        ineligibleReturnInd: string;
+        pimStyleId: string;
+        pimSkuId: string;
+        vendorName: string;
+        newgDestSortId: string;
+        returnLocationName: string;
+        returnStreeAddress: string;
+        returnCity: string;
+        returnState: string;
+        returnZip: string;
+        merchDivId: string;
+        merchGroupId: string;
+        merchDeptId: string;
+        merchClassId: string;
+        merchSubclassId: string;
+        abTestId: string;
+        deliveryDate: string;
+        returnStatus: string;
+        pickq: string;
+        fulfillPhone: string;
+        storeTermTransId: string;
+        returnId: string;
+        presellFlag: string;
+        transactionType: string;
+        productDescription: string;
+        markdownEach: string;
+        arriveByDate: string;
+        promotionDesc: string;
+        promotionKey: string;
+        giftcardEmail: string;
+        storeFulfillFlag: string;
+        buyNowGiftLaterFlag: string;
+        reportingCode: string;
+        pickupStoreNumber: string;
+        productImageUrl: string;
+        designerName: string;
+        productWebUrl: string;
+        colorTag: string;
+        color: string;
+        sizeTag: string;
+        size: string;
+        currencyCode: string;
+        salePrice: string;
+        savingsTag: string;
+        savings: string;
+        yourPriceTag: string;
+        yourPrice: string;
+        inventoryStatus: string;
+        shippingOptionUsed: string;
+        assDiscAmount: string;
+        upcNumber: string;
+        productCode: string;
+        IsServiceOnly: string;
+        assCommissionPin1: string;
+        assCommissionPin2: string;
+        voidAssociateId: string;
+        giftRegistryNumber: string;
+        deliveryProcessingAmount: string;
+        reservation: string;
+        lineSubtype: string;
+        serviceType: string;
+        nmgOneItem: string;
+        pimID: string;
+        pimStyle: string;
+        nDept: string;
+        nClass: string;
+        nSubclass: string;
+        nSupplier: string;
+        nVendorPart: string;
+        nColorID: string;
+        nSizeID: string;
+        nBrandID: string;
+        nMerchDivision: string;
+        nFormerMerchDivision: string;
+        nColorDesc: string;
+        nSizeDesc: string;
+        nBrandDesc: string;
+        holdsNumber: string;
+        itemLineNumber: string;
+        checkDigit: string;
+        pjNumber: string;
+        originalHostUnitPrice: string;
+        posGeoCode: string;
+        taxGeoCode: string;
+        stateTaxAmount: string;
+        countyTaxAmount: string;
+        cityTaxAmount: string;
+        localTaxAmount: string;
+        addtlCountyTaxAmount: string;
+        addtlCountyTaxGeoCode: string;
+        addtlCityTaxAmount: string;
+        addtlCityTaxGeoCode: string;
+        addtlLocalTaxAmount: string;
+        addtlLocalTaxGeoCode: string;
+        commissionableItem: string;
+        returnItem: string;
+        podGeoCode: string;
+        originalClient: string;
+        associateDiscountApplied: string;
+        appliedAssociateDiscount: string;
+        returnLineNumber: string;
+        sendItem: string;
+        pickedUpInStore: string;
+        sendingCustomerIndex: string;
+        recipientCustomerIndex: string;
+        linkedItemIndex: string;
+        shipLines: string;
+        dropshipFlag: string;
+        estDeliveryDate: string;
+        ordHoldCode: string;
+        ordHoldStartDateTime: string;
+        ordHoldEndDateTime: string;
+        ordLineHoldCode: string;
+        ordLineHoldStartDateTime: string;
+        ordLineHoldEndDateTime: string;
+        pickTicketErrorCode: string;
+        shipFromWarehouseCode: string;
+        verifyShipDateTime: string;
+        currentDateTime: string;
+        printTicketDateTime: string;
+        releaseTicketDateTime: string;
+        sale: Sale;
+        return?: Return;
+        localizedPrice: LocalizedPrice;
+        exchangeRate: ExchangeRate;
+    }
+
+    export interface ShipToCustomer {
+        shipToOmsCustomerId: string;
+        shipToExternalCustomerId: string;
+        shipToPrefixCode: string;
+        shipToFirstName: string;
+        shipToLastName: string;
+        shipToSuffixCode: string;
+        shipToGender: string;
+        shipToFirmName: string;
+        shipToCO: string;
+        shipToAddressLine1: string;
+        shipToAddressLine2: string;
+        shipToAddressLine3: string;
+        shipToCity: string;
+        shipToStateCode: string;
+        shipToZipCode: string;
+        shipToCountryCode: string;
+        phone: Phone2[];
+        shipToEmail: string;
+        lineItem: LineItem[];
+        faxPhone: string;
+        deliveryPhoneNumber: string;
+        verificationFlag: string;
+        addressType: string;
+        countyCode: string;
+        bfShipFirstName: string;
+        bfShipLastName: string;
+        bfShipSuffixCode: string;
+        bfShipFirmName: string;
+        bfShipLine1: string;
+        bfShipLine2: string;
+        bfShipLine3: string;
+        bfShipCity: string;
+        bfShipStateCode: string;
+        bfShipZipCode: string;
+        bfShipCountryCode: string;
+        bfShipDayPhone: string;
+        bfShipEveningPhone: string;
+        bfShipEmail: string;
+    }
+
+    export const POS_MESSAGE_TYPES = {
+        POS_ORDER_HISTORY_UPDATE: 'posOrderDetailsUpdate',
+    };

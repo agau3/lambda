@@ -1,0 +1,157 @@
+Resources:
+
+  PosOrderHistoryDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: pos-order-history-dlq-${self:custom.stage}
+      KmsMasterKeyId: alias/aws/sqs
+
+  PosOrderHistoryRetryQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: pos-order-history-retry-${self:custom.stage}-queue
+      KmsMasterKeyId: alias/aws/sqs
+      DelaySeconds: 600
+      VisibilityTimeout: 600
+
+  DynamoDBCrossAccountServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "Dynamo-CrossAccount-Role-${self:custom.stage}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+          - Effect: "Allow"
+            Principal:
+              AWS:
+                - "arn:aws:iam::${self:provider.environment.NM0_ACCOUNT_ID}:role/Omni-Order-History-CrossAccount-Role-${self:custom.stage}"
+            Action:
+              - "sts:AssumeRole"    
+
+      Policies:
+        - PolicyName: "Dynamo-CrossAcount-Policy-${self:custom.stage}"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow # note that these rights are given in the default policy and are required if you want logs out of your lambda(s)
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'log-group:/aws/lambda/*:*:*'
+              - Effect: Allow
+                Action:
+                  - kinesis:DescribeStream
+                  - kinesis:DescribeStreamSummary
+                  - kinesis:ListShards
+                  - kinesis:GetShardIterator
+                  - kinesis:ListStreams
+                  - kinesis:GetRecords
+                  - kinesis:SubscribeToShard
+                Resource:
+                   - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:kinesis'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'stream/${self:provider.environment.POS_SALES_STREAM}'
+              - Effect: Allow
+                Action: 
+                  - kinesis:DescribeStream
+                  - kinesis:DescribeStreamSummary
+                  - kinesis:ListShards
+                  - kinesis:GetShardIterator
+                  - kinesis:ListStreams
+                  - kinesis:GetRecords
+                  - kinesis:SubscribeToShard
+                Resource:
+                   - { "Fn::GetAtt": [ PosBackfillStream, Arn ] }
+                   - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:kinesis'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId' 
+                        - 'stream/${self:provider.environment.CMOS_SALES_STREAM}'
+              - Effect: Allow
+                Action:
+                  - dynamoDB:Query
+                  - dynamoDB:PutItem
+                  - dynamoDB:GetItem
+                  - dynamoDB:UpdateItem
+                  - dynamoDB:DeleteItem
+                  - dynamoDB:BatchWriteItem
+                  - dynamoDB:BatchDeleteItem
+                Resource: [ 
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.onlineSaleActionTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosAssociateOrdersTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosCustomerOrdersTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosOrderDetailsTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosItemDetailsTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.cmosOrdersTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posAssociateOrdersTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posCustomerOrdersTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posOrderDetailsTable}",
+                            "arn:aws:dynamodb:${self:custom.region}:${self:provider.environment.NM0_ACCOUNT_ID}:table/${self:custom.names.posItemDetailsTable}"]
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - arn:aws:lambda:${self:custom.region}:#{AWS::AccountId}:function:${self:service}-${self:custom.stage}-readKinesisStream
+                  - arn:aws:lambda:${self:custom.region}:#{AWS::AccountId}:function:${self:service}-${self:custom.stage}-readCmosKinesisStream    
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - arn:aws:lambda:${self:custom.region}:#{AWS::AccountId}:function:${self:service}-${self:custom.stage}-readKinesisStream   
+                Condition: 
+                  ArnLike: 
+                    AWS:SourceArn: arn:aws:sns:${self:custom.region}:#{AWS::AccountId}:${self:provider.environment.POS_SALES_STREAM}
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - arn:aws:lambda:${self:custom.region}:#{AWS::AccountId}:function:${self:service}-${self:custom.stage}-readCmosKinesisStream   
+                Condition: 
+                  ArnLike: 
+                    AWS:SourceArn: arn:aws:sns:${self:custom.region}:#{AWS::AccountId}:${self:provider.environment.CMOS_SALES_STREAM}
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource: 
+                  - arn:aws:iam::${self:provider.environment.NM0_ACCOUNT_ID}:role/Omni-Order-History-CrossAccount-Role-${self:custom.stage}
+              - Effect: Allow
+                Action:
+                  - sqs:*
+                Resource:
+                  - !GetAtt PosOrderHistoryRetryQueue.Arn
+                  - !GetAtt PosOrderHistoryDLQ.Arn
+              - Effect: Allow
+                Action: 
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: '*'         
+                   
+  PosBackfillStream: 
+    Type: AWS::Kinesis::Stream 
+    Properties: 
+        Name: ${self:custom.names.posBackfillStream} 
+        RetentionPeriodHours: ${file(config/static/${self:custom.stage}.json):stream.pos.retention}
+        ShardCount: ${file(config/static/${self:custom.stage}.json):stream.pos.shards}
+        StreamEncryption:
+            EncryptionType: KMS 
+            KeyId: alias/aws/kinesis

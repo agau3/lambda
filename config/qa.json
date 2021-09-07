@@ -1,0 +1,8 @@
+{
+    "OSP-support-email": "osp_engineering_support@neimanmarcus.com",
+    "nmo": {
+        "accountId": "168860074409"
+    },
+    "streamName": "cdp-pos-rtsales-kinesis-stream-dev",
+    "cmosStreamName": "cdp-cmos-sales-kinesis-stream-dev"
+}
